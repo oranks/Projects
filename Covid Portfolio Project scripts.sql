@@ -115,6 +115,33 @@ Select Continent, Location,Date, Population,isnull(new_Vaccinations,0) New_Vacci
 isnull(RollingPeopleVaccinated,0) RollingPeopleVaccinated, (isnull(RollingPeopleVaccinated,0)/population) *100 as PercentPopulationVaccinated
 from PopvsVac
 
+--TEMP Table
+
+Drop Table if exists #PercentPopulationVaccinated
+Create Table  #PercentPopulationVaccinated
+(
+Continent nvarchar (255),
+Location nvarchar(255),
+Date datetime,
+Population float,
+New_vaccinations float,
+RollingPeopleVaccinated float
+)
+
+Insert into #PercentPopulationVaccinated
+Select dea.continent, dea.location, dea.date,dea.population,vac.new_vaccinations
+,sum(cast(vac.new_vaccinations as int)) over (partition by dea.location order by dea.location,dea.date) as RollingPeopleVaccinated
+from PortfolioProject..CovidDeaths dea
+join  PortfolioProject..CovidVaccinations vac
+     on dea.location = vac.location
+	 and dea.date = vac.date
+--where dea.continent is not null
+--order by 2,3
+
+select * , (isnull(RollingPeopleVaccinated,0)/population) *100 as PercentPopulationVaccinated from #PercentPopulationVaccinated
+
+
+
 ---Create View to store data for later visualization
 
 Create View PopulationVaccinated as
